@@ -13,15 +13,9 @@ using ESRI.ArcGIS.Geoprocessor;
 
 namespace GPMergeDisconnectLine
 {     
-    /************************************************************************************************/
     //定义GP工具
-    //[Guid("526de91e-3fe5-4a46-a7e2-4d1dc3cdb5db")]
-    //[ClassInterface(ClassInterfaceType.None)]
-    //[ProgId("GPMergeDisconnectLine.Class1")]
-
     public class MergeDisjunctLineFunction : IGPFunction
     {
-        //工具的名称
         private string m_ToolName = "MergeDisconnectLine";
         private string m_metadatafile = "MergeDisconnectLine.xml";
         private IArray m_Parameters;             // Array of Parameters
@@ -43,10 +37,8 @@ namespace GPMergeDisconnectLine
             get { return "Merge Disconnect Line"; }
         }
 
-        // 执行程序
         public void Execute(IArray paramvalues, ITrackCancel trackcancel, IGPEnvironmentManager envMgr, IGPMessages message)
         {
-            //输入参数
             IGPParameter parameter = (IGPParameter)paramvalues.get_Element(0);
             IGPValue parameterValue = m_GPUtilities.UnpackGPValue(parameter);
             // Open Input Dataset
@@ -77,17 +69,12 @@ namespace GPMergeDisconnectLine
                 sumCount = rs2.Table.RowCount(null);
             }
 
-            /*
-             * *Create FeatureClass  输出参数！！！
-             * 
-             */
+            /*Create FeatureClass*/
             parameter = (IGPParameter)paramvalues.get_Element(1);
             parameterValue = m_GPUtilities.UnpackGPValue(parameter);
             Geoprocessor gp = new Geoprocessor();
             // Create the new Output Polyline Feature Class
-            CreateFeatureclass cfc = new CreateFeatureclass();       
-    
-            //根据用户在output featureclass中命名的name创建新的输出要素
+            CreateFeatureclass cfc = new CreateFeatureclass();      
             IName name = m_GPUtilities.CreateFeatureClassName(parameterValue.GetAsText());
             IDatasetName dsName = name as IDatasetName;
             IFeatureClassName fcName = dsName as IFeatureClassName;
@@ -104,13 +91,11 @@ namespace GPMergeDisconnectLine
             }
             // Set the output Coordinate System for CreateFeatureClass tool.
             IGPEnvironment env = envMgr.FindEnvironment("outputCoordinateSystem");
-            // Same as Input
             if (env.Value.IsEmpty())
             {
                 //IGeoDataset ds = inputFeatureClass as IGeoDataset;
                 //cfc.spatial_reference = ds.SpatialReference as ISpatialReference3;
             }
-            // Use the evnviroment setting
             else
             {
                 IGPCoordinateSystem cs = env.Value as IGPCoordinateSystem;
@@ -120,12 +105,7 @@ namespace GPMergeDisconnectLine
             cfc.out_name = dsName.Name;
             cfc.geometry_type = "POLYLINE";
             gp.Execute(cfc, null);
-            /******创建完毕***************/
-
             outputFeatureClass = m_GPUtilities.OpenFeatureClassFromString(parameterValue.GetAsText());
-
-
-
             //Set the properties of the Step Progressor
             IStepProgressor pStepPro = (IStepProgressor)trackcancel;
             pStepPro.MinRange = 0;
@@ -135,7 +115,6 @@ namespace GPMergeDisconnectLine
             pStepPro.Position = 0;
             pStepPro.Show();
 
-            //合并操作开始
             MergeOperation mOpetation = new MergeOperation();
             pStepPro.Step();
             List<IFeature> allPolylineList = mOpetation.getAllPolyline(inputFeatureClass);
@@ -150,10 +129,8 @@ namespace GPMergeDisconnectLine
             pStepPro.Step();
             mOpetation.WriteUnionLineToFile(unionLineList, outputFeatureClass);
             pStepPro.Step();
-
             System.Runtime.InteropServices.Marshal.ReleaseComObject(outputFeatureClass);
-
-            //合并操作结束
+            
             pStepPro.Hide();
         }
 
@@ -177,23 +154,6 @@ namespace GPMergeDisconnectLine
                 inputParameter.Name = "input_features";
                 inputParameter.ParameterType = esriGPParameterType.esriGPParameterTypeRequired;
                 parameters.Add(inputParameter);
-
-                ////Area field parameter
-                //inputParameter = new GPParameterClass();
-                //inputParameter.DataType = new GPStringTypeClass();
-
-                //// Value object is GPString
-                //IGPString gpStringValue = new GPStringClass();
-                //gpStringValue.Value = "Area";
-                //inputParameter.Value = (IGPValue)gpStringValue;
-
-                //// Set field name parameter properties
-                //inputParameter.Direction = esriGPParameterDirection.esriGPParameterDirectionInput;
-                //inputParameter.DisplayName = "Area Field Name";
-                //inputParameter.Name = "field_name";
-                //inputParameter.ParameterType = esriGPParameterType.esriGPParameterTypeRequired;
-                //parameters.Add(inputParameter);
-
 
                 // Output parameter (Derived) and data type is DEFeatureClass
                 IGPParameterEdit3 outputParameter = new GPParameterClass();
@@ -237,46 +197,17 @@ namespace GPMergeDisconnectLine
             //// Call InternalValidate (Basic Validation). Are all the required parameters supplied?
             //// Are the Values to the parameters the correct data type?
             IGPMessages validateMsgs = m_GPUtilities.InternalValidate(m_Parameters, paramvalues, updateValues, true, envMgr);
-            
-            //UpdateMessages(paramvalues, envMgr, validateMsgs);
             return validateMsgs;
         }
 
-        //更新参数，有些工具需要设置好一个参数后，才能设置下一个参数，例如需要选择一个矢量数据之后，
-        //才能选择数据中的字段，这样的工作可在该代码中定义，如何定义还需要查看帮助和示例  
+
         public void UpdateParameters(IArray paramvalues, IGPEnvironmentManager pEnvMgr)
         {
             //m_Parameters = paramvalues;
             // Retrieve the input parameter value
             //IGPValue parameterValue = m_GPUtilities.UnpackGPValue(m_Parameters.get_Element(0));
         }
-
-        //更新进度信息
-        /*public void UpdateMessages(IArray paramvalues, IGPEnvironmentManager pEnvMgr, IGPMessages Messages)
-        {
-            // Check for error messages
-            IGPMessage msg = (IGPMessage)Messages;
-            if (msg.IsError())
-            {
-                int aa = 1;
-                return; 
-            }
-                 
-
-            // Get the first Input Parameter
-            //IGPParameter inputparameter = (IGPParameter)paramvalues.get_Element(0);
-
-            // UnPackGPValue. This ensures you get the value either form the dataelement or GpVariable (ModelBuilder)
-            //IGPValue parameterValue = m_GPUtilities.UnpackGPValue(inputparameter);
-
-            // Open the Input Dataset - Use DecodeFeatureLayer as the input might be a layer file or a feature layer from ArcMap.
-            //IFeatureClass inputFeatureClass;
-            //IQueryFilter qf;
-            //m_GPUtilities.DecodeFeatureLayer(parameterValue, out inputFeatureClass, out qf);
-            //return;
-        }*/
-
-
+        
         // This is the function name object for the Geoprocessing Function Tool. 
         // This name object is created and returned by the Function Factory.
         // The Function Factory must first be created before implementing this property.
@@ -377,7 +308,6 @@ namespace GPMergeDisconnectLine
 
             switch (index)
             {
-                    //工具箱中只有一个工具
                 case (0):
                     name = (IGPName) functionName;
                     name.Category = "DisconnectlineMerge";
@@ -387,7 +317,6 @@ namespace GPMergeDisconnectLine
                     name.Factory = (IGPFunctionFactory) this;
                     break;
             }
-
             return functionName;
         }
 
