@@ -19,11 +19,10 @@ namespace GPMergeDisconnectLine
         #region 线要素合并处理函数
         List<IFeature> DisconnPolylineList = new List<IFeature>();
         List<IFeature> firstRowFeatureList = new List<IFeature>();
+        
         //获取shp文件中所有的Polyline(IFeature)对象
         public List<IFeature> getAllPolyline(IFeatureClass inputFeatureClass)
         {
-            //IFeatureLayer featureLayer = map.get_Layer(1) as IFeatureLayer;
-            //IFeatureClass featureClass = featureLayer.FeatureClass;
             IQueryFilter queryFilter = new QueryFilter();
             queryFilter.WhereClause = "";
             IFeatureCursor pFeatCursor = inputFeatureClass.Search(queryFilter, false);
@@ -115,7 +114,7 @@ namespace GPMergeDisconnectLine
             return PointsList;
         }
 
-        //核心函数，将需要进行合并的线要素（没有节点）集合进行合并，结果为多条线        
+        //将需要进行合并的线要素（没有节点）集合进行合并，结果为多条线        
         public List<IFeature> MergeLineListOperate(List<IFeature> toUnionLineList, List<IPoint> distinctNodePointList, IFeatureClass inputFeatureClass)
         {
             List<IFeature> mergeResultLineList = new List<IFeature>();
@@ -208,13 +207,6 @@ namespace GPMergeDisconnectLine
         {
             try
             {
-                //源图层
-                //IFeatureLayer featureLayer = map.get_Layer(1) as IFeatureLayer;
-                //IFeatureClass featureClass = featureLayer.FeatureClass;
-                ////待写入的图层
-                //IFeatureLayer featureLayer2 = map.get_Layer(0) as IFeatureLayer;
-                //IFeatureClass featureClass2 = featureLayer2.FeatureClass;
-
                 IClass newClass = outputFeatureClass as IClass;
 
                 IFields sourceFields = inputFeatureClass.Fields;
@@ -241,8 +233,6 @@ namespace GPMergeDisconnectLine
                 int index = 0;
                 foreach (IFeature featureLine in mergeResultLineList)
                 {
-                    //IFeatureLayer featureLayer2 = map.get_Layer(0) as IFeatureLayer;
-                    //IFeatureClass featureClass2 = featureLayer2.FeatureClass;
                     IFeatureBuffer featureBuffer = outputFeatureClass.CreateFeatureBuffer();
                     IFeatureCursor featureCursor;
                     featureCursor = outputFeatureClass.Insert(true);
@@ -274,9 +264,6 @@ namespace GPMergeDisconnectLine
         //将传入的List<IPolylne>中的多条线要素进行合并为一条线要素
         public IFeature UnionCurrentLineList(List<IFeature> currentMergeLineList, IFeatureClass inputFeatureClass)
         {
-            //IFeatureLayer featureLayer = map.get_Layer(1) as IFeatureLayer;
-            //IFeatureClass featureClass = featureLayer.FeatureClass;
-
             ITopologicalOperator2 pTopologicalOperator;
             IFeature pFeatureTemp = currentMergeLineList[0];
             IGeometry pGeometry = pFeatureTemp.Shape;
